@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Immo-Hub">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EDF1F0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1514" media="(prefers-color-scheme: dark)">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Immobilien-Hub</title>
+<style>
+@font-face{font-family:'IBM Plex Mono';src:url(fonts/plexmono-400.woff) format('woff');font-weight:400 500;font-style:normal;font-display:swap}
+@font-face{font-family:'IBM Plex Mono';src:url(fonts/plexmono-600.woff) format('woff');font-weight:600 700;font-style:normal;font-display:swap}
+/* Layout: Startseite mit Kennzahlen und App-Kacheln, ein Reiter für den Mieten-Abgleich, einer für Sicherung und Einstellungen. Teal als Akzent, damit der Hub sich von den Fach-Apps absetzt. */
+:root{
+  color-scheme:light;
+  --bg:#EDF1F0; --surface:#FFFFFF; --surface2:#F3F6F5; --ink:#142120; --muted:#566665; --line:#D3DDDB;
+  --accent:#1F6F6B; --accent-ink:#FFFFFF; --accent-soft:#D7ECE9;
+  --good:#17804F; --good-soft:#DCF2E6; --mid:#8F5F00; --mid-soft:#FBEECB; --bad:#B3302F; --bad-soft:#F8DDDC;
+  --font-body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  padding-top:env(safe-area-inset-top,0px);
+}
+@media (prefers-color-scheme: dark){:root{
+  color-scheme:dark;
+  --bg:#0F1514; --surface:#17201F; --surface2:#1D2928; --ink:#E4EEEC; --muted:#9BB0AD; --line:#2A3A38;
+  --accent:#6FD0C6; --accent-ink:#06201D; --accent-soft:#16332F;
+  --good:#47C48A; --good-soft:#12301F; --mid:#E3B341; --mid-soft:#352A0E; --bad:#F27F7D; --bad-soft:#3A1717;}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.45;padding-inline:16px;padding-block:0 110px}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+.wrap{max-width:680px;margin-inline:auto}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;margin-inline:-16px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar h1{font-size:20px;font-weight:600;margin:0}
+.bar .sub{display:block;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;min-height:42px;padding:0 14px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.small{min-height:34px;padding:0 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+main{padding-block:14px 0}
+h2{font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:22px 4px 8px}
+h2:first-child{margin-top:2px}
+.note{font-size:13px;color:var(--muted);margin:8px 4px}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.p-good{background:var(--good-soft);color:var(--good)} .p-mid{background:var(--mid-soft);color:var(--mid)} .p-bad{background:var(--bad-soft);color:var(--bad)} .p-none{background:var(--surface2);color:var(--muted)}
+.t-good{color:var(--good)} .t-mid{color:var(--mid)} .t-bad{color:var(--bad)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.cards{display:flex;flex-direction:column;gap:10px}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:22px 18px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:6px}
+.warn{background:var(--mid-soft);border:1px solid var(--mid);border-radius:12px;padding:10px 12px;font-size:13.5px;margin:0 0 10px}
+.ok{background:var(--good-soft);border:1px solid var(--good);border-radius:12px;padding:10px 12px;font-size:13.5px;margin:0 0 10px}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 12px;min-width:0}
+.kpi .l{font-size:12px;color:var(--muted);line-height:1.3;overflow-wrap:anywhere}
+.kpi .v{font-family:var(--font-mono);font-weight:600;font-size:17px;margin-top:3px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.3}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tile{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;min-height:112px}
+.tile b{font-size:16px}
+.tile span.d{font-size:12.5px;color:var(--muted);line-height:1.35;flex:1}
+.tile .pill{align-self:flex-start}
+.li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:12px 14px;border-top:1px solid var(--line);align-items:center}
+.li:first-child{border-top:0}
+.li .a{font-weight:500} .li .b{font-size:12.5px;color:var(--muted)}
+.li.over{box-shadow:inset 4px 0 0 var(--bad)} .li.soon{box-shadow:inset 4px 0 0 var(--mid)}
+.when{font-family:var(--font-mono);font-size:12.5px;font-weight:600;text-align:right}
+.mcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 14px}
+.mcard .t{font-weight:600;font-size:16px} .mcard .a{font-size:13px;color:var(--muted);margin-top:1px}
+.mcard .cmp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0 10px}
+.mcard .cmp div{background:var(--surface2);border-radius:10px;padding:8px 10px;font-size:12px;color:var(--muted)}
+.mcard .cmp b{display:block;font-family:var(--font-mono);font-size:15px;color:var(--ink);margin-top:2px}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:12.5px;color:var(--muted);margin-bottom:8px}
+.fld input,.fld select,.fld textarea{width:100%;min-width:0;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 11px;font-size:16px;color:var(--ink)}
+.code{width:100%;min-height:140px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px;font-family:var(--font-mono);font-size:12px;line-height:1.5;color:var(--ink)}
+.pad{padding:14px}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:11px 14px;border-top:1px solid var(--line);align-items:center}
+.kv:first-child{border-top:0}
+.kv small{display:block;color:var(--muted);font-size:12px}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:10px;padding:10px 16px;font-size:14px;z-index:20;max-width:calc(100vw - 32px)}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;background:var(--surface);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabbar button{display:flex;flex-direction:column;align-items:center;justify-content:center;border:0;background:none;padding:7px 2px;border-radius:10px;color:var(--muted);font-size:13px;font-weight:500;min-height:50px}
+.tabbar button[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+'use strict';
+/* ---------- Grundlagen ---------- */
+const HUBKEY='immobilien-hub-v1';
+const APPS=[
+  {id:'sc', name:'Schnellcheck', key:'immobilien-schnellcheck-v1', url:'../immo-schnellcheck/', d:'Rendite, Cashflow und Ampel für ein Kaufobjekt.'},
+  {id:'bes',name:'Besichtigung', key:'besichtigung-v1', url:'../besichtigung/', d:'Checkliste, Fotos und Fragen beim Termin.'},
+  {id:'cp', name:'Bestands-Cockpit', key:'bestands-cockpit-v1', url:'../bestands-cockpit/', d:'Portfolio, Finanzierung und Szenarien.'},
+  {id:'ver',name:'Vermietung', key:'vermietung-v1', url:'../vermietung/', d:'Mieter, Staffel und Index, Eingang, Abrechnung.'},
+  {id:'afa',name:'AfA-Rechner', key:null, url:'../afa-rechner/', d:'Abschreibung für Gebäude. Speichert keine Daten.'}
+];
+const SUMKEY='vermietung-summary-v1';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const nf=(v,d)=>Number(v).toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d});
+const eur=v=>nf(Math.round(v),0)+' €', eur2=v=>nf(v,2)+' €';
+const r2=v=>Math.round(v*100)/100;
+const fmtD=d=>d&&d.length>=10?d.slice(8,10)+'.'+d.slice(5,7)+'.'+d.slice(0,4):'';
+const rd=k=>{ try{ const r=localStorage.getItem(k); return r?JSON.parse(r):null; }catch(e){ return null; } };
+const rawSize=k=>{ try{ const r=localStorage.getItem(k); return r?r.length:0; }catch(e){ return 0; } };
+let hub={v:1,urls:{},map:{},lastBackup:0};
+try{ const h=JSON.parse(localStorage.getItem(HUBKEY)||'null'); if(h&&h.v===1) hub=Object.assign(hub,h); }catch(e){}
+const saveHub=()=>{ try{ localStorage.setItem(HUBKEY,JSON.stringify(hub)); }catch(e){ toast('Speichern nicht möglich.'); } };
+const urlOf=a=>hub.urls[a.id]||a.url;
+let tab='home', toastT=null, armed=null;
+try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+
+function toast(t){ let e=$('#toast'); if(!e){ e=document.createElement('div'); e.id='toast'; e.className='toast'; e.setAttribute('role','status'); document.body.appendChild(e); } e.textContent=t; e.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>{ e.hidden=true; },2600); }
+function twice(k){ if(armed===k){ armed=null; return true; } armed=k; toast('Zum Bestätigen nochmal tippen.'); setTimeout(()=>{ if(armed===k) armed=null; },3500); return false; }
+
+/* ---------- Daten der Apps ---------- */
+function data(){
+  const sum=rd(SUMKEY), cp=rd('bestands-cockpit-v1'), bes=rd('besichtigung-v1'), sc=rd('immobilien-schnellcheck-v1'), ver=rd('vermietung-v1');
+  return {sum,cp,bes,sc,ver};
+}
+function found(a){ return a.key?rawSize(a.key)>0:null; }
+
+/* ---------- Ansichten ---------- */
+function bar(sub,title){ return `<div class="bar"><span class="sub">${esc(sub)}</span><h1>${esc(title)}</h1></div>`; }
+function tabbar(){ const t=[['home','Übersicht'],['miete','Mieten'],['sich','Sicherung']]; return `<nav class="tabbar" aria-label="Bereiche">${t.map(([i,l])=>`<button data-act="tab" data-v="${i}" ${tab===i?'aria-current="page"':''}>${l}</button>`).join('')}</nav>`; }
+function kpi(l,v,s,cls){ return `<div class="kpi"><div class="l">${l}</div><div class="v ${cls||''}">${v}</div>${s?`<div class="s">${s}</div>`:''}</div>`; }
+
+function viewHome(){
+  const D=data(); let h=bar('Immobilien','Hub')+'<main>';
+  const anyData=APPS.some(a=>found(a));
+  if(!anyData) h+=`<div class="warn"><b>Noch keine Daten gefunden.</b> Entweder hast du in den Apps noch nichts eingetragen, oder der Hub läuft in einer anderen Browser-Umgebung. Auf dem iPhone haben Safari und jedes Home-Bildschirm-Symbol getrennte Speicher. Öffne zum Test alle Apps und den Hub im selben Safari, oder lege den Hub und die Apps alle als Symbol an und nutze die Übergabe über Backup. Die Apps müssen außerdem unter derselben Adresse liegen (gleicher GitHub-Account).</div>`;
+  h+='<h2>Auf einen Blick</h2><div class="kpis">';
+  const s=D.sum;
+  if(s){ const kalt=s.mieten.reduce((a,m)=>a+m.kalt+m.stell,0);
+    h+=kpi('Kaltmiete im Monat (Ist)',eur(kalt),s.mieten.length+' vermietete Wohnung'+(s.mieten.length===1?'':'en')+(s.n>s.mieten.length?', '+(s.n-s.mieten.length)+' ohne aktuellen Mieter':''));
+    h+=kpi('Offene Mietrückstände',eur(s.arrears),'Stand '+new Date(s.ts).toLocaleDateString('de-DE'),s.arrears>0.5?'t-bad':'t-good');
+  }
+  if(D.cp&&Array.isArray(D.cp.objs)&&!D.cp.example){ const o=D.cp.objs, kp=o.reduce((a,x)=>a+(+x.price||0),0), ln=o.reduce((a,x)=>a+(+x.loan||0),0), rent=o.reduce((a,x)=>a+(+x.rent||0),0);
+    h+=kpi('Bestand im Cockpit',o.length+' Objekt'+(o.length===1?'':'e'),'Kaufpreise '+eur(kp));
+    h+=kpi('Darlehen gesamt',eur(ln),kp>0?'Beleihung '+nf(ln/kp*100,0)+' % der Kaufpreise':'');
+    h+=kpi('Miete im Cockpit',eur(rent),'pro Monat, Planwert');
+  }
+  if(D.bes&&Array.isArray(D.bes.objs)){ const now=Date.now(), up=D.bes.objs.filter(o=>o.termin&&new Date(o.termin).getTime()>=now).sort((a,b)=>new Date(a.termin)-new Date(b.termin));
+    h+=kpi('Besichtigungen',D.bes.objs.length+' erfasst',up.length?'Nächster Termin '+new Date(up[0].termin).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+(up[0].titel?' · '+esc(up[0].titel):''):'kein Termin geplant');
+  }
+  h+='</div>';
+  if(!s&&D.ver) h+='<p class="note">Die Vermietungs-App hat noch keine Kurzfassung abgelegt. Öffne sie einmal und schließe sie wieder, dann erscheinen hier die Zahlen.</p>';
+  if(s&&s.dl&&s.dl.length){
+    h+='<h2>Fristen und Termine</h2><div class="card">'+s.dl.map(d=>`<div class="li ${d.state}"><div><div class="a">${esc(d.t)}</div><div class="b">${esc(d.sub||'')}</div></div><div class="when ${d.state==='over'?'t-bad':'t-mid'}">${fmtD(d.date)}</div></div>`).join('')+'</div><p class="note">Aus der Vermietungs-App, Stand '+new Date(s.ts).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'. Überfällig oder in den nächsten 60 Tagen.</p>';
+  }
+  h+='<h2>Apps</h2><div class="tiles">'+APPS.map(a=>{ const f=found(a); const p=f===null?'<span class="pill p-none">ohne Speicher</span>':(f?'<span class="pill p-good">Daten da</span>':'<span class="pill p-none">leer</span>'); return `<a class="tile" href="${esc(urlOf(a))}"><b>${a.name}</b><span class="d">${a.d}</span>${p}</a>`; }).join('')+'</div>';
+  h+='<p class="note">Die Adressen der Apps kannst du unter Sicherung anpassen.</p></main>';
+  return h+tabbar();
+}
+
+function curCp(){ const c=rd('bestands-cockpit-v1'); return c&&Array.isArray(c.objs)?c:null; }
+function suggest(m,cp){ const n=(m.name||'').trim().toLowerCase(); if(!n||!cp) return ''; const o=cp.objs.find(x=>String(x.name||'').trim().toLowerCase()===n); return o?String(o.id):''; }
+function viewMiete(){
+  const D=data(), s=D.sum, cp=curCp(); let h=bar('Abgleich','Mieten')+'<main>';
+  if(!s){ return h+`<div class="empty"><b>Keine Mieterdaten gefunden</b>Öffne die Vermietungs-App, trage Wohnungen mit Mieter ein und schließe sie wieder. Dann erscheinen die aktuellen Mieten hier.</div></main>`+tabbar(); }
+  if(!s.mieten.length) return h+`<div class="empty"><b>Keine aktive Vermietung</b>In der Vermietungs-App läuft aktuell kein Mietverhältnis.</div></main>`+tabbar();
+  if(!cp) h+='<div class="warn">Im Bestands-Cockpit sind noch keine Objekte gespeichert. Du siehst die Mieten, kannst sie aber noch nicht zuordnen.</div>';
+  else if(cp.example) h+='<div class="warn">Das Cockpit zeigt noch seine Beispieldaten. Lege dort erst deine echten Objekte an, bevor du Mieten übernimmst.</div>';
+  h+='<p class="note" style="margin-top:0">Die Miete in der Vermietungs-App ist der Ist-Wert (Kaltmiete plus Stellplatz). Das Cockpit rechnet mit diesem Wert als Planmiete. Ordne jede Wohnung einem Objekt zu und übernimm die Miete mit einem Tipp.</p><div class="cards">';
+  let diffs=0;
+  s.mieten.forEach(m=>{
+    const key=String(m.oid); if(hub.map[key]===undefined){ const sg=suggest(m,cp); if(sg) { hub.map[key]=sg; saveHub(); } }
+    const sel=hub.map[key]||'', co=cp&&sel?cp.objs.find(x=>String(x.id)===sel):null, ist=m.kalt+m.stell;
+    let st='';
+    if(co){ const d=r2(ist-(+co.rent||0)); st=Math.abs(d)<0.5?'<span class="pill p-good">Stimmt überein</span>':'<span class="pill p-mid">Weicht um '+(d>0?'+':'−')+eur2(Math.abs(d))+' ab</span>'; if(Math.abs(d)>=0.5) diffs++; }
+    h+=`<div class="mcard"><div class="t">${esc(m.name||'Wohnung')}</div><div class="a">${esc(m.mieter||'')}${m.qm?' · '+nf(m.qm,0)+' m²':''}</div>
+    <div class="cmp"><div>Ist laut Vermietung<b>${eur2(ist)}</b></div><div>Plan im Cockpit<b>${co?eur2(+co.rent||0):'–'}</b></div></div>
+    <label class="fld">Objekt im Cockpit<select data-map="${esc(key)}"><option value="">– nicht zugeordnet –</option>${cp?cp.objs.map(o=>`<option value="${o.id}" ${String(o.id)===sel?'selected':''}>${esc(o.name||'Objekt')}</option>`).join(''):''}</select></label>
+    <div class="row-actions" style="margin:6px 0 0">${st}${co&&!cp.example?`<button class="btn small primary" data-act="takeRent" data-id="${esc(key)}">Miete übernehmen</button>`:''}</div></div>`;
+  });
+  h+='</div>';
+  if(cp&&!cp.example&&diffs>1) h+='<div class="row-actions"><button class="btn primary" data-act="takeAll">Alle abweichenden Mieten übernehmen</button></div>';
+  if(cp){ const used=new Set(Object.values(hub.map)); const free=cp.objs.filter(o=>!used.has(String(o.id)));
+    if(free.length&&!cp.example) h+='<h2>Cockpit-Objekte ohne Mieter</h2><div class="card">'+free.map(o=>`<div class="kv"><div>${esc(o.name||'Objekt')}<small>Plan ${eur(+o.rent||0)} / Monat, nicht zugeordnet</small></div></div>`).join('')+'</div><p class="note">Das sind Objekte, die noch keiner Wohnung aus der Vermietung zugeordnet sind, zum Beispiel Leerstand oder nicht erfasste Wohnungen.</p>'; }
+  h+='<p class="note">Nach der Übernahme das Cockpit neu öffnen. Wenn es parallel in einem anderen Fenster offen war, kann es die Änderung beim nächsten Speichern überschreiben.</p></main>';
+  return h+tabbar();
+}
+function takeRent(key){
+  const s=data().sum, cp=curCp(); if(!s||!cp) return false;
+  const m=s.mieten.find(x=>String(x.oid)===key), sel=hub.map[key]; if(!m||!sel) return false;
+  const o=cp.objs.find(x=>String(x.id)===sel); if(!o) return false;
+  o.rent=r2(m.kalt+m.stell); return {cp,name:o.name};
+}
+function writeCp(cp){ try{ localStorage.setItem('bestands-cockpit-v1',JSON.stringify(cp)); return true; }catch(e){ toast('Schreiben nicht möglich.'); return false; } }
+
+function lastBackupInfo(){
+  if(!hub.lastBackup) return {cls:'p-bad',t:'Noch kein Gesamt-Backup erstellt'};
+  const days=Math.floor((Date.now()-hub.lastBackup)/864e5);
+  return {cls:days>30?'p-mid':'p-good',t:'Letztes Backup: '+new Date(hub.lastBackup).toLocaleDateString('de-DE')+(days>30?' (über 30 Tage her)':'')};
+}
+let bkText='', restoreText='';
+function viewSich(){
+  let h=bar('Daten','Sicherung')+'<main>'; const lb=lastBackupInfo();
+  h+=`<h2>Gesamt-Backup</h2><div class="card pad"><p style="margin:0 0 10px">Ein Backup enthält die Daten aller Apps in einem Text: ${APPS.filter(a=>a.key).map(a=>a.name).join(', ')}. Fotos der Besichtigungs-App sind nicht enthalten, die sichert du dort einzeln.</p>
+  <span class="pill ${lb.cls}">${lb.t}</span>
+  <div class="row-actions"><button class="btn primary" data-act="mkbk">Backup erstellen</button></div>
+  ${bkText?`<textarea class="code" id="bk" readonly aria-label="Backup-Text">${esc(bkText)}</textarea><div class="row-actions"><button class="btn" data-act="cpbk">Text kopieren</button><button class="btn" data-act="dlbk">Als Datei speichern</button></div>`:''}</div>`;
+  h+=`<h2>Wiederherstellen</h2><div class="card pad"><p style="margin:0 0 10px">Füge den Backup-Text ein oder wähle die Datei. Vorhandene Daten der enthaltenen Apps werden dabei ersetzt.</p>
+  <textarea class="code" id="rs" placeholder="Backup-Text hier einfügen" aria-label="Backup-Text zum Wiederherstellen">${esc(restoreText)}</textarea>
+  <div class="row-actions"><input type="file" id="rsf" accept=".json,.txt,application/json,text/plain" style="max-width:100%"><button class="btn danger" data-act="restore">Wiederherstellen</button></div></div>`;
+  h+='<h2>Adressen der Apps</h2><div class="card pad"><p class="note" style="margin:0 0 10px">Standard ist ein Nachbarordner, zum Beispiel ../vermietung/. Trage bei Bedarf die volle Adresse ein.</p>'+APPS.map(a=>`<label class="fld">${a.name}<input type="text" inputmode="url" data-url="${a.id}" value="${esc(urlOf(a))}" autocapitalize="off" autocorrect="off"></label>`).join('')+'<div class="row-actions"><button class="btn small" data-act="urlreset">Standard wiederherstellen</button></div></div>';
+  h+='<h2>Speicherstatus</h2><div class="card">'+APPS.filter(a=>a.key).map(a=>{ const n=rawSize(a.key); return `<div class="kv"><div>${a.name}<small>${n?'Daten gefunden, '+nf(n/1024,1)+' KB':'keine Daten in diesem Speicher'}</small></div><span class="pill ${n?'p-good':'p-none'}">${n?'ok':'leer'}</span></div>`; }).join('')+'</div>';
+  h+='<p class="note">Safari räumt Webseitendaten nach etwa 7 Tagen ohne Nutzung auf, Home-Bildschirm-Symbole sind davon ausgenommen. Lege deshalb regelmäßig ein Backup an, am besten nach größeren Änderungen.</p></main>';
+  return h+tabbar();
+}
+
+function render(keep){ const y=keep?window.scrollY:0; $('#app').innerHTML=tab==='home'?viewHome():tab==='miete'?viewMiete():viewSich(); window.scrollTo(0,y); }
+
+/* ---------- Backup ---------- */
+function makeBackup(){
+  const data={}; let n=0;
+  APPS.filter(a=>a.key).concat([{key:SUMKEY},{key:HUBKEY}]).forEach(a=>{ try{ const r=localStorage.getItem(a.key); if(r){ data[a.key]=r; n++; } }catch(e){} });
+  if(!n) return null;
+  return JSON.stringify({src:'immobilien-hub',v:1,ts:new Date().toISOString(),data});
+}
+function doRestore(txt){
+  let j; try{ j=JSON.parse(txt.trim()); }catch(e){ return 'Der Text ist kein gültiges Backup.'; }
+  if(!j||j.src!=='immobilien-hub'||!j.data||typeof j.data!=='object') return 'Das ist kein Backup aus dem Hub.';
+  const allowed=new Set(APPS.filter(a=>a.key).map(a=>a.key).concat([SUMKEY,HUBKEY]));
+  let n=0;
+  for(const k of Object.keys(j.data)){ if(!allowed.has(k)||typeof j.data[k]!=='string') continue; try{ JSON.parse(j.data[k]); }catch(e){ return 'Ein Eintrag im Backup ist beschädigt. Nichts wurde geändert.'; } }
+  for(const k of Object.keys(j.data)){ if(!allowed.has(k)) continue; try{ localStorage.setItem(k,j.data[k]); n++; }catch(e){ return 'Speichern fehlgeschlagen nach '+n+' Einträgen.'; } }
+  try{ const h=JSON.parse(localStorage.getItem(HUBKEY)||'null'); if(h&&h.v===1) hub=Object.assign({v:1,urls:{},map:{},lastBackup:0},h); }catch(e){}
+  return {n};
+}
+
+/* ---------- Ereignisse ---------- */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return; const act=b.dataset.act;
+  if(act==='tab'){ tab=b.dataset.v; bkText=''; render(); return; }
+  if(act==='takeRent'){ const r=takeRent(b.dataset.id); if(r&&writeCp(r.cp)){ toast('Miete für „'+r.name+'“ übernommen.'); render(true); } return; }
+  if(act==='takeAll'){ const s=data().sum, cp=curCp(); if(!s||!cp||cp.example) return; let n=0;
+    s.mieten.forEach(m=>{ const sel=hub.map[String(m.oid)]; const o=sel&&cp.objs.find(x=>String(x.id)===sel); if(o&&Math.abs(r2(m.kalt+m.stell)-(+o.rent||0))>=0.5){ o.rent=r2(m.kalt+m.stell); n++; } });
+    if(n&&writeCp(cp)) toast(n+' Miete'+(n===1?'':'n')+' übernommen.'); render(true); return; }
+  if(act==='mkbk'){ if(!makeBackup()){ toast('Keine Daten zum Sichern gefunden.'); return; } hub.lastBackup=Date.now(); saveHub(); bkText=makeBackup(); render(true); toast('Backup erstellt. Jetzt kopieren oder speichern.'); return; }
+  if(act==='cpbk'){ const ta=$('#bk'); const done=()=>toast('Kopiert.'); if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(bkText).then(done,()=>{ ta.select(); document.execCommand('copy'); done(); }); } else { ta.select(); document.execCommand('copy'); done(); } return; }
+  if(act==='dlbk'){ try{ const blob=new Blob([bkText],{type:'application/json'}), a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='immobilien-backup-'+new Date().toISOString().slice(0,10)+'.json'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500); }catch(err){ toast('Speichern als Datei nicht möglich, bitte Text kopieren.'); } return; }
+  if(act==='restore'){ const t=($('#rs').value||'').trim(); if(!t){ toast('Bitte zuerst den Backup-Text einfügen.'); return; } if(!twice('rs')) return; const r=doRestore(t); if(typeof r==='string'){ toast(r); return; } restoreText=''; render(); toast(r.n+' Einträge wiederhergestellt. Apps neu öffnen.'); return; }
+  if(act==='urlreset'){ hub.urls={}; saveHub(); render(true); toast('Standardadressen gesetzt.'); return; }
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset&&t.dataset.map!==undefined){ if(t.value) hub.map[t.dataset.map]=t.value; else hub.map[t.dataset.map]=''; saveHub(); render(true); return; }
+  if(t.id==='rsf'&&t.files&&t.files[0]){ const rdr=new FileReader(); rdr.onload=()=>{ restoreText=String(rdr.result||''); render(true); toast('Datei geladen. Jetzt „Wiederherstellen“ tippen.'); }; rdr.readAsText(t.files[0]); }
+});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset&&t.dataset.url){ const a=APPS.find(x=>x.id===t.dataset.url); const v=t.value.trim(); if(v&&v!==a.url) hub.urls[a.id]=v; else delete hub.urls[a.id]; saveHub(); }
+  if(t.id==='rs') restoreText=t.value;
+});
+render();
+</script>
+<footer class="legal-foot"><button type="button" id="legalBtn">Haftung &amp; Datenschutz</button></footer>
+<dialog id="legalDlg"><form method="dialog"><h2>Haftung &amp; Datenschutz</h2>
+<p id="legalWho" hidden></p>
+<h3>Haftung</h3><p>Diese App liefert Orientierungsrechnungen. Sie ersetzt keine Steuer-, Rechts-, Finanzierungs- oder Anlageberatung. Ergebnisse, Fristen und Rechtshinweise können unvollständig oder nicht mehr aktuell sein und hängen von deinen Eingaben und vom Einzelfall ab. Für Richtigkeit und Vollständigkeit wird keine Gewähr übernommen. Prüfe wichtige Entscheidungen mit Steuerberater, Rechtsanwalt oder Bank.</p>
+<h3>Datenschutz</h3><p>Es gibt kein Konto, keinen Server der App und keine Werbung. Deine Eingaben werden ausschließlich lokal im Speicher deines Browsers auf deinem Gerät abgelegt und nicht an mich oder Dritte übertragen. Es werden weder Tracking noch Cookies zu Analysezwecken eingesetzt, und alle Schriften liegen auf demselben Server, es werden keine Schriften bei Google geladen.</p>
+<p>Beim Aufruf der Seite verarbeitet der Hosting-Anbieter GitHub (GitHub Pages) technisch notwendig Verbindungsdaten wie die IP-Adresse. Darauf hat die App keinen Einfluss, siehe die Datenschutzerklärung von GitHub.</p>
+<p>Die Daten bleiben auf deinem Gerät, solange du sie nicht selbst exportierst oder weitergibst. Wenn du Browserdaten löschst oder die App entfernst, sind sie weg. Lege deshalb regelmäßig ein Backup an, soweit die App es anbietet. Besonders bei Mieterdaten bist du selbst für den datenschutzgerechten Umgang verantwortlich.</p>
+<button class="legal-ok" value="ok">Schließen</button></form></dialog>
+<style>
+.legal-foot{text-align:center;padding:18px 16px calc(100px + env(safe-area-inset-bottom));font:12px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+.legal-foot button{background:none;border:0;color:inherit;opacity:.6;text-decoration:underline;font:inherit;padding:8px;cursor:pointer}
+#legalDlg{color-scheme:light dark;background:Canvas;color:CanvasText;border:1px solid color-mix(in srgb,CanvasText 25%,transparent);border-radius:14px;padding:18px;max-width:min(460px,calc(100vw - 32px));max-height:80vh;font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+#legalDlg::backdrop{background:rgba(0,0,0,.5)}
+#legalDlg h2{font-size:18px;margin:0 0 8px}#legalDlg h3{font-size:14px;margin:14px 0 4px}#legalDlg p{margin:0 0 8px}
+.legal-ok{margin-top:8px;width:100%;min-height:44px;border-radius:10px;border:1px solid color-mix(in srgb,CanvasText 30%,transparent);background:none;color:inherit;font:inherit;font-weight:600;cursor:pointer}
+</style>
+<script>
+/* Anbieter (optional, z. B. Name und E-Mail für öffentliche Weitergabe): */
+var LEGAL_ANBIETER='';
+(function(){var b=document.getElementById('legalBtn'),d=document.getElementById('legalDlg'),w=document.getElementById('legalWho');
+if(LEGAL_ANBIETER){w.textContent='Anbieter: '+LEGAL_ANBIETER;w.hidden=false}
+b.addEventListener('click',function(){if(d.showModal)d.showModal();else d.setAttribute('open','')})})();
+</script>
+
+</body>
+</html>
