@@ -111,6 +111,7 @@ h2:first-child{margin-top:2px}
 .tile .s{font-size:12.5px;color:var(--muted);line-height:1.35}
 .tile .pill{margin-top:4px;justify-self:start}
 /*ENDTILES*/
+.tile .spark{grid-column:1/-1;width:100%;max-width:130px;height:auto;display:block;margin-top:2px}
 </style>
 </head>
 <body>
@@ -159,14 +160,33 @@ function data(){
 
 function figure(a,D){
   try{
-  if(a.id==='ver'&&D.sum){ const k=D.sum.mieten.reduce((x,m)=>x+m.kalt+m.stell,0); return [eur(k),D.sum.arrears>0.5?'Rückstand '+eur(D.sum.arrears):'Kaltmiete im Monat, kein Rückstand']; }
-  if(a.id==='cp'&&D.cp&&Array.isArray(D.cp.objs)&&!D.cp.example){ const l=D.cp.objs.reduce((x,o)=>x+(+o.loan||0),0); return [D.cp.objs.length+(D.cp.objs.length===1?' Objekt':' Objekte'),'Darlehen '+eur(l)]; }
+  if(a.id==='ver'&&D.sum){ const k=D.sum.mieten.reduce((x,m)=>x+m.kalt+m.stell,0); return [eur(k),D.sum.arrears>0.5?'Rückstand '+eur(D.sum.arrears):'Kaltmiete im Monat, kein Rückstand',k]; }
+  if(a.id==='cp'&&D.cp&&Array.isArray(D.cp.objs)&&!D.cp.example){ const l=D.cp.objs.reduce((x,o)=>x+(+o.loan||0),0); return [D.cp.objs.length+(D.cp.objs.length===1?' Objekt':' Objekte'),'Darlehen '+eur(l),l]; }
   if(a.id==='bes'&&D.bes&&Array.isArray(D.bes.objs)&&D.bes.objs.length){ const up=D.bes.objs.filter(o=>o.termin&&new Date(o.termin).getTime()>=Date.now()).sort((x,y)=>new Date(x.termin)-new Date(y.termin)); return [D.bes.objs.length+' erfasst',up.length?'Nächster Termin '+new Date(up[0].termin).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'}):'kein Termin geplant']; }
   if(a.id==='sc'&&D.sc&&+D.sc.kp>0) return [eur(+D.sc.kp),'Kaufpreis des letzten Checks'];
-  if(a.id==='pv'){ const j=rd('pvwp-summary-v1'); if(j&&j.irr!==null&&j.irr!==undefined) return [nf(j.irr*100,1)+' %','Rendite PV und WP, Einsatz '+eur(j.inv)]; }
-  if(a.id==='ren'){ const j=rd('renovierung-summary-v1'); if(j&&j.n>0) return [eur(j.total),j.n+(j.n===1?' Projekt':' Projekte')+' in Planung']; }
+  if(a.id==='pv'){ const j=rd('pvwp-summary-v1'); if(j&&j.irr!==null&&j.irr!==undefined) return [nf(j.irr*100,1)+' %','Rendite PV und WP, Einsatz '+eur(j.inv),j.irr*100]; }
+  if(a.id==='ren'){ const j=rd('renovierung-summary-v1'); if(j&&j.n>0) return [eur(j.total),j.n+(j.n===1?' Projekt':' Projekte')+' in Planung',j.total]; }
   }catch(e){}
   return null;
+}
+
+/* ---------- Verlauf (Sparklines) ---------- */
+const HK='hub-hist-v1';
+function histLoad(){ try{ const j=JSON.parse(localStorage.getItem(HK)); return j&&typeof j==='object'?j:{}; }catch(e){ return {}; } }
+function histNote(id,v){
+  if(typeof v!=='number'||!isFinite(v)) return [];
+  const H=histLoad(), day=new Date().toISOString().slice(0,10), a=Array.isArray(H[id])?H[id]:[];
+  if(a.length&&a[a.length-1][0]===day) a[a.length-1][1]=v; else a.push([day,v]);
+  H[id]=a.slice(-30); try{ localStorage.setItem(HK,JSON.stringify(H)); }catch(e){}
+  return H[id];
+}
+function spark(a){
+  if(a.length<2) return '';
+  const W=120,Hh=26,vs=a.map(x=>x[1]), mn=Math.min(...vs), mx=Math.max(...vs), r=(mx-mn)||1;
+  const X=i=>3+(W-6)*i/(a.length-1), Y=v=>Hh-4-(Hh-8)*(v-mn)/r;
+  const pts=a.map((x,i)=>X(i).toFixed(1)+','+Y(x[1]).toFixed(1)).join(' ');
+  const d=vs[vs.length-1]-vs[0], word=d>0?'gestiegen':d<0?'gesunken':'unverändert';
+  return `<svg class="spark" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Verlauf über ${a.length} Messpunkte, ${word}"><polyline points="${pts}" fill="none" stroke="var(--tc)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${X(a.length-1).toFixed(1)}" cy="${Y(vs[vs.length-1]).toFixed(1)}" r="3.2" fill="var(--tc)" stroke="var(--surface)" stroke-width="1.5"/></svg>`;
 }
 function found(a){ return a.key?rawSize(a.key)>0:null; }
 
@@ -198,7 +218,7 @@ function viewHome(){
   if(s&&s.dl&&s.dl.length){
     h+='<h2>Fristen und Termine</h2><div class="card">'+s.dl.map(d=>`<div class="li ${d.state}"><div><div class="a">${esc(d.t)}</div><div class="b">${esc(d.sub||'')}</div></div><div class="when ${d.state==='over'?'t-bad':'t-mid'}">${fmtD(d.date)}</div></div>`).join('')+'</div><p class="note">Aus der Vermietungs-App, Stand '+new Date(s.ts).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'. Überfällig oder in den nächsten 60 Tagen.</p>';
   }
-  h+='<h2>Apps</h2><div class="tiles">'+APPS.map(a=>{ const fg=figure(a,D), f=found(a); const v=fg?`<div class="big">${esc(fg[0])}</div><div class="s">${esc(fg[1])}</div>`:`<div class="s">${esc(a.d)}</div><span class="pill ${f===null?'p-none':'p-none'}">${f===null?'ohne Speicher':'noch leer'}</span>`; return `<a class="tile" href="${esc(urlOf(a))}" style="--tc:${COLS[a.id]}"><span class="ic">${icon(a.id,38)}</span><b>${a.short||a.name}</b>${v}</a>`; }).join('')+'</div>';
+  h+='<h2>Apps</h2><div class="tiles">'+APPS.map(a=>{ const fg=figure(a,D), f=found(a); const v=fg?`<div class="big">${esc(fg[0])}</div><div class="s">${esc(fg[1])}</div>${spark(histNote(a.id,fg[2]))}`:`<div class="s">${esc(a.d)}</div><span class="pill ${f===null?'p-none':'p-none'}">${f===null?'ohne Speicher':'noch leer'}</span>`; return `<a class="tile" href="${esc(urlOf(a))}" style="--tc:${COLS[a.id]}"><span class="ic">${icon(a.id,38)}</span><b>${a.short||a.name}</b>${v}</a>`; }).join('')+'</div>';
   h+='<p class="note">Die Adressen der Apps kannst du unter Sicherung anpassen.</p></main>';
   return h+tabbar();
 }
