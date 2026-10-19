@@ -120,6 +120,7 @@ h2:first-child{margin-top:2px}
 'use strict';
 /* ---------- Grundlagen ---------- */
 const HUBKEY='immobilien-hub-v1';
+try{ localStorage.setItem('immo-hub-url-v1',location.href.split('#')[0].split('?')[0]); }catch(e){}
 const APPS=[
   {id:'sc', name:'Schnellcheck', key:'immobilien-schnellcheck-v1', url:'../immo-schnellcheck/', d:'Rendite, Cashflow und Ampel für ein Kaufobjekt.'},
   {id:'bes',name:'Besichtigung', key:'besichtigung-v1', url:'../besichtigung/', d:'Checkliste, Fotos und Fragen beim Termin.'},
@@ -266,6 +267,7 @@ function lastBackupInfo(){
 let bkText='', restoreText='';
 function viewSich(){
   let h=bar('Daten','Sicherung')+'<main>'; const lb=lastBackupInfo();
+  h+=`<h2>Empfohlene Einrichtung auf dem iPhone</h2><div class="card pad"><p style="margin:0 0 8px">Jedes Home-Bildschirm-Symbol hat auf dem iPhone einen eigenen Speicher. Nur wenn die Apps im selben Speicher laufen, sieht der Hub ihre Daten.</p><ol style="margin:0;padding-left:20px;line-height:1.55"><li>Lege nur den Hub auf den Home-Bildschirm.</li><li>Öffne die Apps über die Kacheln im Hub.</li><li>Kehre mit „Zum Hub“ am Seitenende jeder App zurück.</li><li>Willst du bestehende App-Symbole entfernen: Sichere deren Daten vorher in der jeweiligen App als Text. Mit dem Symbol gehen auch seine Daten verloren. Spiele sie danach in der App ein, die du über den Hub öffnest.</li></ol></div>`;
   h+=`<h2>Gesamt-Backup</h2><div class="card pad"><p style="margin:0 0 10px">Ein Backup enthält die Daten aller Apps in einem Text: ${APPS.filter(a=>a.key).map(a=>a.name).join(', ')}. Fotos der Besichtigungs-App sind nicht enthalten, die sichert du dort einzeln.</p>
   <span class="pill ${lb.cls}">${lb.t}</span>
   <div class="row-actions"><button class="btn primary" data-act="mkbk">Backup erstellen</button></div>
