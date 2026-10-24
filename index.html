@@ -112,6 +112,22 @@ h2:first-child{margin-top:2px}
 .tile .pill{margin-top:4px;justify-self:start}
 /*ENDTILES*/
 .tile .spark{grid-column:1/-1;width:100%;max-width:130px;height:auto;display:block;margin-top:2px}
+
+/*FOLD*/
+.bstat{display:flex;align-items:center;gap:8px;margin-top:6px;border:0;background:none;padding:0;font-size:12.5px;color:var(--muted);text-align:left;width:100%}
+.bstat .pill{font-size:11.5px;padding:2px 9px}
+.bstat u{margin-left:auto;font-size:12px;color:var(--accent)}
+details.fold{margin:12px 0 0;background:transparent}
+details.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 4px;-webkit-tap-highlight-color:transparent}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary h2{margin:0;flex:1;font-size:12px}
+details.fold>summary::after{content:'';width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s;margin:-4px 4px 0 0}
+details.fold[open]>summary::after{transform:rotate(-135deg);margin-top:4px}
+details.fold>summary .hint{font-size:12px;color:var(--muted);font-family:var(--font-mono);white-space:nowrap}
+details.fold>.fb{padding-bottom:2px}
+.fold-tools{display:flex;gap:8px;justify-content:flex-end;margin:8px 0 -4px}
+.fold-tools button{border:0;background:none;color:var(--accent);font-size:12.5px;padding:6px 4px;text-decoration:underline}
+/*ENDFOLD*/
 </style>
 </head>
 <body>
@@ -128,12 +144,11 @@ const APPS=[
   {id:'ver',name:'Vermietung', key:'vermietung-v1', url:'../vermietung/', d:'Mieter, Staffel und Index, Eingang, Abrechnung.'},
   {id:'pv',name:'PV und Wärmepumpe', short:'PV und WP', key:'pvwp-v1', url:'../pv-waermepumpe/', d:'Solar, Speicher, Wärmepumpe, Förderung, Mieter.'},
   {id:'ren',name:'Renovierung', key:'renovierung-v1', url:'../renovierung/', d:'Gewerke, Angebote, 15-%-Grenze, Mieterhöhung.'},
-  {id:'flip',name:'Flip-Rechner', short:'Flip', key:'flip-v1', url:'../flip-rechner/', d:'Kauf, Sanierung, Verkauf in 10 Jahren, Spekulationssteuer.'},
-  {id:'afa',name:'AfA-Rechner', key:null, url:'../afa-rechner/', d:'Abschreibung für Gebäude. Speichert keine Daten.'}
+  {id:'flip',name:'Flip-Rechner', short:'Flip', key:'flip-v1', url:'../flip-rechner/', d:'Kauf, Sanierung, Verkauf in 10 Jahren, Spekulationssteuer.'}
 ];
-const GLYPH={"hub": "<rect x=\"14\" y=\"14\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#fff\"/><rect x=\"35\" y=\"14\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#fff\"/><rect x=\"14\" y=\"35\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#fff\"/><rect x=\"35\" y=\"35\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#fff\" opacity=\".55\"/>", "sc": "<path d=\"M13 43a19 19 0 0 1 38 0\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\"/><path d=\"M32 43L42 29\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\"/><circle cx=\"32\" cy=\"43\" r=\"4\" fill=\"#fff\"/>", "bes": "<path d=\"M12 31L32 14l20 17\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M17 28v22h30V28\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linejoin=\"round\"/><path d=\"M25 38l5 5 10-11\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>", "cp": "<rect x=\"13\" y=\"38\" width=\"9\" height=\"13\" rx=\"2\" fill=\"#fff\"/><rect x=\"27.5\" y=\"29\" width=\"9\" height=\"22\" rx=\"2\" fill=\"#fff\"/><rect x=\"42\" y=\"19\" width=\"9\" height=\"32\" rx=\"2\" fill=\"#fff\"/><path d=\"M14 27l15-9 10 5 12-11\" fill=\"none\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>", "afa": "<path d=\"M12 14h12v12h12v12h12v12\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M12 50h40\" stroke=\"#fff\" stroke-opacity=\".55\" stroke-width=\"3.5\" stroke-linecap=\"round\"/>", "ver": "<circle cx=\"23\" cy=\"32\" r=\"10\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\"/><path d=\"M33 32h20M46 32v9M53 32v6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>", "pv": "<circle cx=\"15\" cy=\"15\" r=\"5.5\" fill=\"#fff\"/><g stroke=\"#fff\" stroke-width=\"3.2\" stroke-linecap=\"round\"><path d=\"M15 5v2.5M5 15h2.5M8 8l1.8 1.8M22 8l-1.8 1.8\"/></g><path d=\"M26 11h28l-5 20H21z\" fill=\"#fff\"/><g stroke=\"#B45309\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M33.5 11l-4 20M43.5 11l-3.5 20M23.7 21h28.3\"/></g><g fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 39c-3 3 3 5 0 8s3 5 0 8\"/><path d=\"M32 39c-3 3 3 5 0 8s3 5 0 8\"/><path d=\"M46 39c-3 3 3 5 0 8s3 5 0 8\"/></g>", "ren": "<rect x=\"10\" y=\"12\" width=\"34\" height=\"14\" rx=\"3.5\" fill=\"#fff\"/><path d=\"M44 19h8v14H33v7\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect x=\"28\" y=\"40\" width=\"10\" height=\"14\" rx=\"3\" fill=\"#fff\"/>", "flip": "<path d=\"M32 11L9 31h7.5v21h31V31H55z\" fill=\"#fff\"/><path d=\"M32 46V32M25 38.5l7-7 7 7\" fill=\"none\" stroke=\"#9C3D54\" stroke-width=\"4.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"};
-const COLS={"hub": "#2A3441", "sc": "#2B4C9B", "bes": "#0E6B73", "cp": "#2E7D4F", "afa": "#8A5A2B", "ver": "#5B3F8C", "pv": "#B45309", "ren": "#A63D2F", "flip": "#9C3D54"};
-const ICKEY={sc:'sc',bes:'bes',cp:'cp',ver:'ver',pv:'pv',ren:'ren',flip:'flip',afa:'afa'};
+const GLYPH={"hub": "<rect x=\"14\" y=\"14\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#fff\"/><rect x=\"35\" y=\"14\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#fff\"/><rect x=\"14\" y=\"35\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#fff\"/><rect x=\"35\" y=\"35\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#fff\" opacity=\".55\"/>", "sc": "<path d=\"M13 43a19 19 0 0 1 38 0\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\"/><path d=\"M32 43L42 29\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\"/><circle cx=\"32\" cy=\"43\" r=\"4\" fill=\"#fff\"/>", "bes": "<path d=\"M12 31L32 14l20 17\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M17 28v22h30V28\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linejoin=\"round\"/><path d=\"M25 38l5 5 10-11\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>", "cp": "<rect x=\"13\" y=\"38\" width=\"9\" height=\"13\" rx=\"2\" fill=\"#fff\"/><rect x=\"27.5\" y=\"29\" width=\"9\" height=\"22\" rx=\"2\" fill=\"#fff\"/><rect x=\"42\" y=\"19\" width=\"9\" height=\"32\" rx=\"2\" fill=\"#fff\"/><path d=\"M14 27l15-9 10 5 12-11\" fill=\"none\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>", "ver": "<circle cx=\"23\" cy=\"32\" r=\"10\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\"/><path d=\"M33 32h20M46 32v9M53 32v6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>", "pv": "<circle cx=\"15\" cy=\"15\" r=\"5.5\" fill=\"#fff\"/><g stroke=\"#fff\" stroke-width=\"3.2\" stroke-linecap=\"round\"><path d=\"M15 5v2.5M5 15h2.5M8 8l1.8 1.8M22 8l-1.8 1.8\"/></g><path d=\"M26 11h28l-5 20H21z\" fill=\"#fff\"/><g stroke=\"#B45309\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M33.5 11l-4 20M43.5 11l-3.5 20M23.7 21h28.3\"/></g><g fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 39c-3 3 3 5 0 8s3 5 0 8\"/><path d=\"M32 39c-3 3 3 5 0 8s3 5 0 8\"/><path d=\"M46 39c-3 3 3 5 0 8s3 5 0 8\"/></g>", "ren": "<rect x=\"10\" y=\"12\" width=\"34\" height=\"14\" rx=\"3.5\" fill=\"#fff\"/><path d=\"M44 19h8v14H33v7\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect x=\"28\" y=\"40\" width=\"10\" height=\"14\" rx=\"3\" fill=\"#fff\"/>", "flip": "<path d=\"M32 11L9 31h7.5v21h31V31H55z\" fill=\"#fff\"/><path d=\"M32 46V32M25 38.5l7-7 7 7\" fill=\"none\" stroke=\"#9C3D54\" stroke-width=\"4.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"};
+const COLS={"hub": "#2A3441", "sc": "#2B4C9B", "bes": "#0E6B73", "cp": "#2E7D4F", "ver": "#5B3F8C", "pv": "#B45309", "ren": "#A63D2F", "flip": "#9C3D54"};
+const ICKEY={sc:'sc',bes:'bes',cp:'cp',ver:'ver',pv:'pv',ren:'ren',flip:'flip'};
 function icon(k,sz){ return `<svg width="${sz}" height="${sz}" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="ig${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#000" stop-opacity=".14"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="${COLS[k]}"/><rect width="64" height="64" rx="15" fill="url(#ig${k})"/>${GLYPH[k]}</svg>`; }
 const SUMKEY='vermietung-summary-v1';
 const $=s=>document.querySelector(s);
@@ -194,7 +209,16 @@ function spark(a){
 function found(a){ return a.key?rawSize(a.key)>0:null; }
 
 /* ---------- Ansichten ---------- */
-function bar(sub,title){ return `<div class="bar"><span class="sub">${esc(sub)}</span><h1>${esc(title)}</h1></div>`; }
+function bkStat(){
+  const any=APPS.some(a=>a.key&&rawSize(a.key));
+  if(!any&&!hub.lastBackup) return '';
+  if(!hub.lastBackup) return {cls:'p-bad',t:'Noch kein Backup'};
+  const d=Math.max(0,Math.floor((Date.now()-hub.lastBackup)/864e5));
+  return {cls:d>30?'p-bad':d>14?'p-mid':'p-good',t:d===0?'Backup von heute':d===1?'Backup vor 1 Tag':'Backup vor '+d+' Tagen'};
+}
+function bar(sub,title){ const b=bkStat();
+  const st=b?`<button type="button" class="bstat" data-act="tab" data-v="sich" aria-label="${esc(b.t)}, zur Sicherung"><span class="pill ${b.cls}">${esc(b.t)}</span>${b.cls==='p-good'?'':'<span>Jetzt sichern</span>'}<u>Sicherung</u></button>`:'';
+  return `<div class="bar"><span class="sub">${esc(sub)}</span><h1>${esc(title)}</h1>${st}</div>`; }
 function tabbar(){ const t=[['home','Übersicht'],['miete','Mieten'],['sich','Sicherung']]; return `<nav class="tabbar" aria-label="Bereiche">${t.map(([i,l])=>`<button data-act="tab" data-v="${i}" ${tab===i?'aria-current="page"':''}>${l}</button>`).join('')}</nav>`; }
 function kpi(l,v,s,cls){ return `<div class="kpi"><div class="l">${l}</div><div class="v ${cls||''}">${v}</div>${s?`<div class="s">${s}</div>`:''}</div>`; }
 
@@ -309,7 +333,20 @@ function viewSich(){
   return h+tabbar();
 }
 
-function render(keep){ const y=keep?window.scrollY:0; $('#app').innerHTML=tab==='home'?viewHome():tab==='miete'?viewMiete():viewSich(); window.scrollTo(0,y); }
+const UIKEY='hub-ui-v1'; let ui={}; try{ ui=JSON.parse(localStorage.getItem(UIKEY)||'{}')||{}; }catch(e){ ui={}; }
+const CLOSED_DEF={'sich:Empfohlene Einrichtung auf dem iPhone':1,'sich:Wiederherstellen':1,'sich:Adressen der Apps':1,'sich:Speicherstatus':1};
+function foldify(){
+  const m=document.querySelector('#app main'); if(!m) return;
+  const hs=[...m.children].filter(n=>n.tagName==='H2');
+  hs.forEach(h=>{ const id=tab+':'+h.textContent.trim(); const d=document.createElement('details'); d.className='fold'; d.dataset.fold=id;
+    d.open=id in ui?!!ui[id]:!CLOSED_DEF[id];
+    const sm=document.createElement('summary'); const body=document.createElement('div'); body.className='fb';
+    let n=h.nextSibling; while(n&&n.tagName!=='H2'){ const nx=n.nextSibling; body.appendChild(n); n=nx; }
+    h.replaceWith(d); sm.appendChild(h); d.append(sm,body); });
+  if(hs.length>2){ const t=document.createElement('div'); t.className='fold-tools'; t.innerHTML='<button type="button" data-act="foldall" data-v="1">Alle aufklappen</button><button type="button" data-act="foldall" data-v="0">Alle zuklappen</button>'; m.insertBefore(t,m.querySelector('details.fold')); }
+}
+document.addEventListener('toggle',e=>{ const d=e.target; if(d.matches&&d.matches('details.fold')){ ui[d.dataset.fold]=d.open; try{ localStorage.setItem(UIKEY,JSON.stringify(ui)); }catch(_){} } },true);
+function render(keep){ const y=keep?window.scrollY:0; $('#app').innerHTML=tab==='home'?viewHome():tab==='miete'?viewMiete():viewSich(); foldify(); window.scrollTo(0,y); }
 
 /* ---------- Backup ---------- */
 function makeBackup(){
@@ -333,7 +370,8 @@ function doRestore(txt){
 document.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]'); if(!b) return; const act=b.dataset.act;
   if(act==='ics'){ const it=icsItems(); if(!it.length){ toast('Keine Termine gefunden.'); return; } icsSave('immobilien-fristen.ics',icsBuild(it)).then(()=>toast(it.length+' Termine bereit. Öffne die Datei, um sie im Kalender zu speichern.')); return; }
-  if(act==='tab'){ tab=b.dataset.v; bkText=''; render(); return; }
+  if(act==='foldall'){ document.querySelectorAll('details.fold').forEach(d=>{ d.open=b.dataset.v==='1'; }); return; }
+  if(act==='tab'){ tab=b.dataset.v; bkText=''; render(); window.scrollTo(0,0); return; }
   if(act==='takeRent'){ const r=takeRent(b.dataset.id); if(r&&writeCp(r.cp)){ toast('Miete für „'+r.name+'“ übernommen.'); render(true); } return; }
   if(act==='takeAll'){ const s=data().sum, cp=curCp(); if(!s||!cp||cp.example) return; let n=0;
     s.mieten.forEach(m=>{ const sel=hub.map[String(m.oid)]; const o=sel&&cp.objs.find(x=>String(x.id)===sel); if(o&&Math.abs(r2(m.kalt+m.stell)-(+o.rent||0))>=0.5){ o.rent=r2(m.kalt+m.stell); n++; } });
